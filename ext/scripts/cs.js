@@ -2,6 +2,12 @@ var inbox;
 var count;
 var title;
 
+var timer = 30;
+
+function log(s) {
+  console.log("[" +  (new Date()).toLocaleTimeString('de') + "] " + s);
+}
+
 function check_count(do_ping) {
   if (inbox === undefined) {
     var ff = document.getElementById('MailFolderPane.FavoritesFolders');
@@ -19,32 +25,43 @@ function check_count(do_ping) {
     }
   }
   var count_new = inbox?parseInt(inbox.nextElementSibling.innerText):null;
-  console.log("setInterval fired from content script, count = " + count_new);
-  if (count === undefined || count_new != count) {
+  log("setInterval fired from content script, count = " + count_new);
+  var payload;
+  if (count_new !== null && (count === undefined || count_new != count)) {
     count = count_new;
-    chrome.runtime.sendMessage(
-      {count: count.toString()}, function(response) {
-        if (response.reload) {
-          window.location.reload();
-        }
-    });
+    payload = {count: count.toString()};
   }
   else if (do_ping) {
-    chrome.runtime.sendMessage({ping : 'ok'});
+    payload = {ping : 'ok'};
+  }
+  if (payload) {
+    chrome.runtime.sendMessage(
+      payload, function(response) {
+        if (response.reload) {
+          log("About to call window.location.reload()");
+          window.location.reload();
+          log("Called window.location.reload()");
+        }
+    });
   }
 }
 
 document.onvisibilitychange = function() {
-  console.log("onvisibilitychange(visible = " + (!document.hidden) + ")");
+  log("onvisibilitychange(visible = " + (!document.hidden) + ")");
   chrome.runtime.sendMessage({visible: !document.hidden}, function(response) {
+    if (response.check) {
+      log("About to check count in response to visibility message");
+      check_count(false);
+    }
   });
 }
 
-window.setInterval(function() {check_count(true);}, 10000);
+check_count(true);
+window.setInterval(function() {check_count(true);}, timer * 1000);
 
 chrome.runtime.onMessage.addListener(
   function(request, sender, sendResponse) {
-    console.log("Received message " + request.action);
+    log("Received message " + request.action);
     check_count(false);
   });
 

@@ -2,7 +2,7 @@ var inbox;
 var count;
 var title;
 
-window.setInterval(function(){
+function check_count(do_ping) {
   if (inbox === undefined) {
     var ff = document.getElementById('MailFolderPane.FavoritesFolders');
     if (ff) {
@@ -29,14 +29,25 @@ window.setInterval(function(){
         }
     });
   }
-  else {
+  else if (do_ping) {
     chrome.runtime.sendMessage({ping : 'ok'});
   }
-}, 10000);
+}
 
 document.onvisibilitychange = function() {
   console.log("onvisibilitychange(visible = " + (!document.hidden) + ")");
   chrome.runtime.sendMessage({visible: !document.hidden}, function(response) {
   });
 }
+
+window.setInterval(function() {check_count(true);}, 10000);
+
+chrome.runtime.onMessage.addListener(
+  function(request, sender, sendResponse) {
+    console.log("Received message " + request.action);
+    check_count(false);
+  });
+
+
+
 // lvHighlightSubjectClass

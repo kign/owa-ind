@@ -93,6 +93,11 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
     ((undefined !== changeInfo.favIconUrl)        ?"favIconUrl":
     "other")))))))));
   console.log("tab " + tabId + " changed " + change);
+
+  if (tabId == localStorage.tabId && changeInfo.audible !== undefined) {
+    console.log("Audible tab, sending message to check count");
+    chrome.tabs.sendMessage(tabId, {action: 'check'});
+  }
 });
 
 function time () {

@@ -24,7 +24,16 @@ function check_count(do_ping) {
       }
     }
   }
-  var count_new = inbox?parseInt(inbox.nextElementSibling.innerText):null;
+  var count_new;
+  if (!inbox) {
+    count_new = null;
+  }
+  else if (inbox.nextElementSibling.innerText == '') {
+    count_new = 0;
+  }
+  else {
+    count_new = parseInt(inbox.nextElementSibling.innerText);
+  }
   log("setInterval fired from content script, count = " + count_new);
   var payload;
   if (count_new !== null && (count === undefined || count_new != count)) {

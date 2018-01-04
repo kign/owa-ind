@@ -1,22 +1,73 @@
 'use strict';
 
+log("Page bg.js (re-)loaded");
+
+// Options/constants
 var lost_connection_timeout = 60;
 var reload_timer = 700;
+
+// Aux functions
+
+function time () {
+  return (new Date()).getTime()/1000.0;
+}
+
+function set_status(status) {
+  if (localStorage.status == status)
+    return;
+
+  log("Status changed to " + status);
+
+  if (status == "init") {
+    chrome.browserAction.setIcon({path : 'icons/icon_128_red.png'});
+    chrome.browserAction.setTitle({title: "Initialization"});
+  }
+  else if (status == "err") {
+    chrome.browserAction.setIcon({path : 'icons/icon_128_red.png'});
+    chrome.browserAction.setTitle({title: "Error"});
+    chrome.notifications.create({
+          type:     'basic',
+          iconUrl:  'icons/icon_128_red.png',
+          title:    "ERROR",
+          message:  "Lost connection to OWA tab",
+          requireInteraction: true,
+          // buttons: [
+          //   {title: 'Keep it Flowing.'}
+          // ],
+          priority: 0});
+  }
+  else if (status == "ok") {
+    chrome.browserAction.setIcon({path : 'icons/icon_128.png'});
+    if (localStorage.status != "ok_attn")
+      chrome.browserAction.setTitle({title: "OK"});
+  }
+  else if (status == "ok_attn") {
+    chrome.browserAction.setIcon({path : 'icons/icon_128_attn.png'});
+    if (localStorage.status != "ok")
+      chrome.browserAction.setTitle({title: "OK"});
+  }
+
+  localStorage.status = status;
+}
 
 function log(s) {
   console.log("[" +  (new Date()).toLocaleTimeString('de') + "] " + s);
 }
 
-chrome.alarms.create("owa-ind", {delayInMinutes: 1, periodInMinutes: 1});
+// event listeners
 
-log("Page bg.js loaded");
-localStorage.last_ping = 0;
-localStorage.status = 'init';
-chrome.browserAction.setTitle({title: "Initializing"});
-localStorage.last_reload = time();
-localStorage.last_activated = 0;
-localStorage.last_count = -1;
-localStorage.tabId = -1;
+chrome.runtime.onInstalled.addListener(function(details) {
+  localStorage.status = 'init';
+  localStorage.last_ping = 0;
+  localStorage.last_reload = time();
+  localStorage.last_activated = 0;
+  localStorage.last_count = -1;
+  localStorage.tabId = -1;
+
+  chrome.alarms.create("owa-ind", {delayInMinutes: 1, periodInMinutes: 1});
+
+  log("Extension installed");
+});
 
 chrome.alarms.onAlarm.addListener(function() {
   log("Alarm fired");
@@ -113,45 +164,3 @@ chrome.tabs.onUpdated.addListener(function (tabId, changeInfo, tab) {
     localStorage.last_ping = time();
   }
 });
-
-function time () {
-  return (new Date()).getTime()/1000.0;
-}
-
-function set_status(status) {
-  if (localStorage.status == status)
-    return;
-
-  log("Status changed to " + status);
-
-  if (status == "init") {
-    chrome.browserAction.setIcon({path : 'icons/icon_128_red.png'});
-    chrome.browserAction.setTitle({title: "Initialization"});
-  }
-  else if (status == "err") {
-    chrome.browserAction.setIcon({path : 'icons/icon_128_red.png'});
-    chrome.browserAction.setTitle({title: "Error"});
-    chrome.notifications.create({
-          type:     'basic',
-          iconUrl:  'icons/icon_128_red.png',
-          title:    "ERROR",
-          message:  "Lost connection to OWA tab",
-          requireInteraction: true,
-          // buttons: [
-          //   {title: 'Keep it Flowing.'}
-          // ],
-          priority: 0});
-  }
-  else if (status == "ok") {
-    chrome.browserAction.setIcon({path : 'icons/icon_128.png'});
-    if (localStorage.status != "ok_attn")
-      chrome.browserAction.setTitle({title: "OK"});
-  }
-  else if (status == "ok_attn") {
-    chrome.browserAction.setIcon({path : 'icons/icon_128_attn.png'});
-    if (localStorage.status != "ok")
-      chrome.browserAction.setTitle({title: "OK"});
-  }
-
-  localStorage.status = status;
-}

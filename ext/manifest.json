@@ -1,6 +1,6 @@
 {
   "name": "OWA Indicator",
-  "version": "0.1",
+  "version": "0.2",
   "manifest_version": 2,
   "description": "Show unread e-mail indicator in OWA email",
   "icons": { "128": "icons/icon_128.png" },
@@ -19,7 +19,7 @@
     }
   ],
   "browser_action": {
-    "default_title": "",
+    "default_title": "Initializing",
     "default_icon": "icons/icon_128_red.png",
     "default_popup": "popup.html"
   }

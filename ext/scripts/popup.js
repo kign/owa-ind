@@ -21,22 +21,22 @@ function update() {
     hide(elm);
 
   document.getElementById('status').textContent = localStorage.status;
-
-  if (localStorage.status == "ok" || localStorage.status == "ok_attn" ) {
+  if (['ok', 'ok_attn'].includes(localStorage.status)) {
     show('ok');
     document.getElementById('counter').textContent = localStorage.last_count;
     document.getElementById('last_reported').textContent = (time() - localStorage.last_ping).toFixed(2);
   }
-  else if (localStorage.status == "err" || localStorage.status == "init" ) {
+  else if (['cs_err', 'err', 'init'].includes(localStorage.status)) {
     show('init');
     if (localStorage.status == "err" ) {
       show('err');
-      (new Date(t*1000)).toLocaleTimeString("de")
+      document.getElementById('last_seen').textContent =
+             (new Date(localStorage.last_ping*1000)).toLocaleTimeString("de");
     }
-    document.getElementById('last_seen').textContent =
-           (new Date(localStorage.last_ping*1000)).toLocaleTimeString("de");
+    else if(localStorage.status == "cs_err" ) {
+      show('cs_err');
+    }
   }
-
 }
 
 document.getElementById('options').addEventListener('click',

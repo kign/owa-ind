@@ -4,6 +4,7 @@ console.log("Page bg.js (re-)loaded");
 
 // Options/constants
 var lost_connection_timeout = 60;
+var buzz_interval = 30;
 var reload_timer = 700;
 
 // Aux functions
@@ -98,6 +99,7 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
       asynchResponseRequested = true;
     }
     else if (request.action == 'click_inbox') {
+      // this is a hookup for testing
       console.log("Message click_inbox");
       var tabId = parseInt(localStorage.tabId);
       if (tabId > 0) {
@@ -111,12 +113,12 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
 
   else {
     localStorage.last_ping = time();
-    console.log("Message from " + sender.tab.id);
+    console.log("Message ", request, " from ", sender.tab.id);
 
     if (request.action == 'config') {
       console.log("Received config call from tab " + sender.tab.id);
       localStorage.tabId = sender.tab.id;
-      sendResponse({timer: 30});
+      sendResponse({buzz_interval: buzz_interval});
     }
     else if (request.count != undefined) {
       if (localStorage.last_count == request.count) {
@@ -152,32 +154,35 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         console.log("Requesting content script to reload, " + td + " secs since last reload");
         localStorage.last_reload = time();
       }
-      else if (request.error != undefined) {
-        localStorage.cs_error = request.error;
-        set_status('cs_err');
-      }
       else {
         console.log("No need to reload, " + td + " elapsed");
       }
       sendResponse({reload : do_reload});
+      if (!['ok','ok_attn'].includes(localStorage.status))
+        set_status('ok');
+    }
+    else if (request.error != undefined) {
+      localStorage.cs_error = request.error;
+      set_status('cs_err');
     }
     else if (request.visible !== undefined) {
       localStorage.visible = request.visible;
       console.log("Visibility changed to " + request.visible  + ", " + localStorage.visible);
-      if (request.visible) {
-        var td = time() - localStorage.last_activated;
-        console.log("Time since last activated : " + td);
+      if (request.visible && localStorage.status == 'ok_attn')
         set_status('ok');
-      }
-      else {
-        sendResponse({check : true});
-      }
+
+      // if (request.visible) {
+      //   var td = time() - localStorage.last_activated;
+      //   console.log("Time since last activated : " + td);
+      //   set_status('ok');
+      // }
+      // else {
+      //   sendResponse({check : true});
+      // }
     }
     else {
       console.log("Received unknown message from content script");
     }
-    if (localStorage.status != "ok" && localStorage.status != "ok_attn")
-      set_status('ok');
   }
 
   return asynchResponseRequested;

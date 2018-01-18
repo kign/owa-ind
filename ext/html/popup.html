@@ -1,0 +1,19 @@
+<div id='init' class='hidden'>
+  <div id='err'  class='hidden' style='color: red;'>Lost connection to OWA tab since <span id="last_seen"></span></div>
+  Please load Outlook Web in a tab and click here when ready &#x27a9; <button id="ready">Ready!</button>
+  <div class='inject_status'></div>
+</div>
+<div id='ok' class='hidden'>
+  <span id="counter"></span> unread e-mails in Inbox, last reported <span id="last_reported"></span> secs. ago
+</div>
+<div>
+  Status: <span id="status">(Not initialized)</span>
+</div>
+<div>
+  <button id="options">Options</button>
+</div>
+<div id='debugging'>
+  <button id="open_in_tab">Open this page in a separate tab</button>
+</div>
+<script type="text/javascript" src="/scripts/popup.js"></script>
+<div style='width: 350pt;'></div>

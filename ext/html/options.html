@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>My Test Extension Options</title>
+  <title>Outlook Web Access Unread counter: extension options</title>
   <style>
     body: { padding: 10px; }
   </style>
@@ -9,9 +9,13 @@
 
 <body>
   <form name="options">
-    OWA/Exchange URL: <input type="text" name="url" size="50"/><br />
-    (Usually <i>https://exchange.mycompany.com/</i>)<br />
-    <button name="save" type="submit">Save</button>
+    <div>XPath for unread counter</div>
+    <div><input type="text" name="xp_count_elm" size="80"/></div>
+
+    <div>XPath for mailbox folders</div>
+    <div><input type="text" name="xp_folders" size="80"/></div>
+
+    <div><button name="save" type="submit">Save</button></div>
   </form>
 
   <div id="status">** not saved **</div>

@@ -2,10 +2,17 @@
 
 console.log("Page bg.js (re-)loaded");
 
+const default_options = {
+  xp_count_elm:
+"//div[@id='MailFolderPane.FavoritesFolders']//span[text()='Inbox']/following-sibling::*[1]/span[1]",
+  xp_folders:
+"//div[@class='subfolders' and @role='group']/..//span[@role='heading' and @autoid]"
+};
+
 // Options/constants
-var lost_connection_timeout = 60;
-var buzz_interval = 30;
-var reload_timer = 700;
+const lost_connection_timeout = 60;
+const buzz_interval = 30;
+const reload_timer = 700;
 
 // Aux functions
 
@@ -83,32 +90,34 @@ chrome.alarms.onAlarm.addListener(function() {
 chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
   var asynchResponseRequested = false;
 
-  if (!sender.tab) {
-    if (request.action == 'inject') {
-      console.log("Message inject");
-      chrome.tabs.executeScript({
-        file: 'scripts/cs.js'
-      }, function (res_a) {
-        if (chrome.runtime.lastError)
-          console.log("Cannot load script cs.js, " + chrome.runtime.lastError.message);
+  if (request.action == 'inject') {
+    console.log("Message inject");
+    chrome.tabs.executeScript({
+      file: 'scripts/cs.js'
+    }, function (res_a) {
+      if (chrome.runtime.lastError)
+        console.log("Cannot load script cs.js, " + chrome.runtime.lastError.message);
 
-        sendResponse({error: chrome.runtime.lastError?
-                             chrome.runtime.lastError.message:null,
-                      result: res_a?res_a[0]:null});
-      });
-      asynchResponseRequested = true;
+      sendResponse({error: chrome.runtime.lastError?
+                           chrome.runtime.lastError.message:null,
+                    result: res_a?res_a[0]:null});
+    });
+    asynchResponseRequested = true;
+  }
+  else if (request.action == 'click_inbox') {
+    // this is a hookup for testing
+    console.log("Message click_inbox");
+    let tabId = parseInt(localStorage.tabId);
+    if (tabId > 0) {
+      chrome.tabs.sendMessage(tabId, {action: 'click_inbox'});
     }
-    else if (request.action == 'click_inbox') {
-      // this is a hookup for testing
-      console.log("Message click_inbox");
-      var tabId = parseInt(localStorage.tabId);
-      if (tabId > 0) {
-        chrome.tabs.sendMessage(tabId, {action: 'click_inbox'});
-      }
-    }
-    else {
-      console.log("Received unknown message from somewhere");
-    }
+  }
+  else if (request.action == 'defaults') {
+    console.log("Message defaults");
+    sendResponse(default_options);
+  }
+  else if (!sender.tab){
+    console.log("Received unknown message from somewhere");
   }
 
   else {
@@ -116,9 +125,15 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     console.log("Message ", request, " from ", sender.tab.id);
 
     if (request.action == 'config') {
-      console.log("Received config call from tab " + sender.tab.id);
+      console.log("Received config call from tab ", sender.tab.id);
       localStorage.tabId = sender.tab.id;
-      sendResponse({buzz_interval: buzz_interval});
+      chrome.storage.sync.get(default_options,
+        function(items) {
+          sendResponse({buzz_interval: buzz_interval,
+                        xp_count_elm: items.xp_count_elm,
+                        xp_folders: items.xp_folders});
+      });
+      asynchResponseRequested = true;
     }
     else if (request.count != undefined) {
       if (localStorage.last_count == request.count) {
@@ -148,8 +163,8 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
         chrome.browserAction.setTitle({title: "" + request.count + " unread messages"});
         localStorage.last_count = request.count;
       }
-      var td = time() - localStorage.last_reload;
-      var do_reload = td > reload_timer && localStorage.visible == "false";
+      let td = time() - localStorage.last_reload;
+      let do_reload = td > reload_timer && localStorage.visible == "false";
       if (do_reload) {
         console.log("Requesting content script to reload, " + td + " secs since last reload");
         localStorage.last_reload = time();
@@ -184,12 +199,11 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
       console.log("Received unknown message from content script");
     }
   }
-
   return asynchResponseRequested;
 });
 
 chrome.tabs.onActivated.addListener(function (activeInfo) {
-  var tabId = activeInfo.tabId;
+  let tabId = activeInfo.tabId;
   localStorage.last_activated = (new Date()).getTime();
   console.log("tab " + tabId + " activated");
 });

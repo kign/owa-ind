@@ -1,12 +1,7 @@
 'use strict';
 
-//var xp_count = "//div[@id='MailFolderPane.FavoritesFolders']//span[text()='Inbox']/following-sibling::*[1]/span[1]/text()";
-//var xp_inbox = "//div[@id='MailFolderPane.FavoritesFolders']//span[text()='Inbox']";
-
-var xp_count_elm = "//div[@id='MailFolderPane.FavoritesFolders']//span[text()='Inbox']/following-sibling::*[1]/span[1]";
-
-
-var xp_folders = "//div[@class='subfolders' and @role='group']/..//span[@role='heading' and @autoid]";
+var xp_count_elm;
+var xp_folders;
 
 var count_elm;
 var folder_idx = 0;
@@ -72,6 +67,9 @@ function check_count() {
 function config () {
   chrome.runtime.sendMessage(
     {action: 'config'}, function(response) {
+      xp_count_elm = response.xp_count_elm;
+      xp_folders = response.xp_folders;
+
       count_elm = document.evaluate(xp_count_elm, document, null,
                                     XPathResult.FIRST_ORDERED_NODE_TYPE).singleNodeValue;
       if (count_elm) {
@@ -86,7 +84,8 @@ function config () {
         });
       }
       else {
-        chrome.runtime.sendMessage({error: "XPath counter element not found"});
+        chrome.runtime.sendMessage({error: "XPath counter element not found",
+                                    xp_count_elm: xp_count_elm});
       }
   });
 }

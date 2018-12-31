@@ -18,18 +18,6 @@ function save_options(evt) {
   });
 }
 
-// function restore_options() {
-//   chrome.storage.sync.get({
-//     xp_count_elm:
-//      "//div[@id='MailFolderPane.FavoritesFolders']//span[text()='Inbox']/following-sibling::*[1]/span[1]",
-//     xp_folders:
-//      "//div[@class='subfolders' and @role='group']/..//span[@role='heading' and @autoid]"
-//   }, function(items) {
-//     document.forms.options.xp_count_elm.value = items.xp_count_elm;
-//     document.forms.options.xp_folders.value = items.xp_folders;
-//   });
-// }
-
 function restore_options() {
   chrome.runtime.sendMessage(
     {action: 'defaults'}, function(response) {
